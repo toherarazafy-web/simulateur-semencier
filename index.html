@@ -14,7 +14,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3",system-ui,sans-serif}
 .w{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
-h1,h2{font-family:"Source Serif 4",Georgia,serif;color:var(--g);margin:0}
+h1,h2{font-family:"Source Serif 4",Georgia,serif;color:var(--g);maargin:0}
 h1{font-size:clamp(24px,4vw,34px);line-height:1.15}
 h2{font-size:20px;margin-bottom:10px}
 .note{background:var(--soft);border-left:4px solid var(--o);padding:10px 14px;margin:14px 0 20px;font-size:15px}
@@ -54,9 +54,10 @@ summary{cursor:pointer;font-weight:600;color:var(--g)}
 <body>
 <div class="w">
 <h1>Simulateur stratégique du système semencier</h1>
-<p style="color:var(--mut);margin:6px 0 0">Androy et Anosy · point de départ : production déclarée de 177,12 t</p>
-<div class="note"><b>Outil de discussion, simulation non validée.</b> Les valeurs marquées « hypothèse » et les effets (eau, variétés, appui technique, sécheresse) ne viennent pas des données du projet. Ils sont modifiables en bas de page.</div>
+<p style="color:var(--mut);margin:6px 0 0">Androy et Anosy · semences botaniques, en tonnes · point de départ : production déclarée de 177,12 t, toutes espèces</p>
+<div class="note"><b>Outil de discussion, simulation non validée.</b> Les valeurs marquées « hypothèse » et les effets (eau, variétés, appui technique, sécheresse) ne viennent pas des données du projet. Ils sont modifiables en bas de page. Le simulateur couvre uniquement les semences botaniques, pas la multiplication végétative ni les cultures maraîchères.</div>
 
+<div class="s" style="max-width:460px"><label for="pd">Produit simulé</label><select id="pd"></select><small id="pdn"></small></div>
 <div class="pre" id="pre" role="group" aria-label="Préréglages"></div>
 
 <div class="grid">
@@ -95,7 +96,10 @@ summary{cursor:pointer;font-weight:600;color:var(--g)}
 </div>
 
 <script>
-var BASE={S:457,w:10,l:25,a:8,f:2,p:5},P0=177.12;
+var BASE={S:457,w:10,l:25,a:8,f:2,p:5},P0=177.12,P00=177.12,NEED0=885.6;
+var SP=[["Toutes espèces (total des slides)",177.12,457],["Haricot",150.4,224.0],["Dolique",14.6,85.6],["Arachide",7.2,51.9],["Mil",2.9,18.2],["Maïs",1.2,9.4],["Sorgho",0.5,10.0],["Niébé",0.3,36.8],["Pois de terre",0.1,11.1]];
+function sp(p){var q=Object.assign({},p);q.S=Math.round(p.S/457*BASE.S*10)/10;return q}
+function dg(){return H.need<30?2:H.need<300?1:0}
 var PR=[
 ["Situation actuelle",{S:457,w:10,l:25,a:8,f:2,p:5}],
 ["Option 1 · Renforcer l’existant",{S:500,w:10,l:22,a:12,f:4,p:15}],
@@ -126,36 +130,38 @@ function calc(v,sc){
  var y=((1-w)*(1-loss)+w*(1+g))/((1-w0)+w0*(1+g));
  var gv=H.gv/100,a=v.a/100,a0=BASE.a/100;
  var va=((1-a)+a*(1+gv))/((1-a0)+a0*(1+gv));
- var gt=H.gt/100,s=Math.min(1,v.p*H.ha/v.S),s0=Math.min(1,BASE.p*H.ha/BASE.S);
+ var T=v.S/BASE.S*457,gt=H.gt/100,s=Math.min(1,v.p*H.ha/T),s0=Math.min(1,BASE.p*H.ha/457);
  var t=(1+s*gt)/(1+s0*gt);
  var pr=P0*(v.S/BASE.S)*y*va*t*(1-v.l/100)/(1-BASE.l/100);
  return pr}
 function render(){
  var sc=+$("sc").value,pr=calc(V,sc),n=H.need,i=H.inc/100;
  var cov=pr/n*100,def=n-pr,vend=pr*H.vd/100,dem=V.f/100*n;
- $("rp").textContent=fm(pr,1);
- $("rpd").textContent=(pr>=P0?"+":"")+fm((pr/P0-1)*100,0)+" % vs 177,12 t";
+ $("rp").textContent=fm(pr,P0<10?2:1);
+ $("rpd").textContent=(pr>=P0?"+":"")+fm((pr/P0-1)*100,0)+" % vs "+fm(P0,2)+" t";
  $("rc").textContent=fm(cov,1)+" %";
  $("rcd").textContent="Départ : 20 %";
- $("rd").textContent=fm(def,0);
- $("rdd").textContent="Fourchette : "+fm(n*(1-i)-pr,0)+" à "+fm(n*(1+i)-pr,0);
+ $("rd").textContent=fm(def,dg());
+ $("rdd").textContent="Fourchette : "+fm(n*(1-i)-pr,dg())+" à "+fm(n*(1+i)-pr,dg());
  $("rf").textContent=dem>0?fm(vend/dem*100,0)+" %":"–";
- $("rfd").textContent="Demande formelle "+fm(dem,0)+" t · offre vendable "+fm(vend,0)+" t";
+ $("rfd").textContent="Demande formelle "+fm(dem,dg())+" t · offre vendable "+fm(vend,dg())+" t";
  $("bc").style.width=Math.min(100,cov)+"%";
- SL.forEach(function(d){$("o_"+d[0]).textContent=fm(V[d[0]])+(d[5]?" "+d[5]:"")});
+ SL.forEach(function(d){$("o_"+d[0]).textContent=fm(V[d[0]],d[0]=="S"&&BASE.S<50?1:0)+(d[5]?" "+d[5]:"")});
  var h="<tr><th>Option</th><th>Normale</th><th>Sèche</th><th>Très sèche</th></tr>";
- PR.forEach(function(p,k){h+="<tr"+(k==cur?' class="on"':"")+"><td>"+p[0]+"</td>"+[0,1,2].map(function(c){return"<td>"+fm(calc(p[1],c)/n*100,1)+" %</td>"}).join("")+"</tr>"});
+ PR.forEach(function(p,k){h+="<tr"+(k==cur?' class="on"':"")+"><td>"+p[0]+"</td>"+[0,1,2].map(function(c){return"<td>"+fm(calc(sp(p[1]),c)/n*100,1)+" %</td>"}).join("")+"</tr>"});
  $("tb").innerHTML=h}
-function setP(k){cur=k;V=Object.assign({},PR[k][1]);SL.forEach(function(d){$("i_"+d[0]).value=V[d[0]]});
+function setP(k){cur=k;V=sp(PR[k][1]);SL.forEach(function(d){$("i_"+d[0]).value=V[d[0]]});
  Array.prototype.forEach.call($("pre").children,function(b,j){b.setAttribute("aria-pressed",j==k)});render()}
 H=HY.reduce(function(o,d){o[d[0]]=d[2];return o},{});
 $("pre").innerHTML=PR.map(function(p,k){return'<button type="button" aria-pressed="false">'+p[0]+"</button>"}).join("");
 Array.prototype.forEach.call($("pre").children,function(b,k){b.onclick=function(){setP(k)}});
-$("sl").innerHTML=SL.map(function(d){return'<div class="s"><label for="i_'+d[0]+'"><span>'+d[1]+(d[6]?'<span class="tag">hypothèse</span>':"")+'</span><output id="o_'+d[0]+'"></output></label><input type="range" id="i_'+d[0]+'" min="'+d[2]+'" max="'+d[3]+'" step="'+d[4]+'"><small>'+d[7]+"</small></div>"}).join("");
+$("sl").innerHTML=SL.map(function(d){return'<div class="s"><label for="i_'+d[0]+'"><span>'+d[1]+(d[6]?'<span class="tag">hypothèse</span>':"")+'</span><output id="o_'+d[0]+'"></output></label><input type="range" id="i_'+d[0]+'" min="'+d[2]+'" max="'+d[3]+'" step="'+d[4]+'"><small id="sm_'+d[0]+'">'+d[7]+"</small></div>"}).join("");
 $("hy").innerHTML=HY.map(function(d){return'<label>'+d[1]+'<input type="number" id="h_'+d[0]+'" value="'+d[2]+'" step="any" min="0"></label>'}).join("");
 SL.forEach(function(d){$("i_"+d[0]).oninput=function(e){V[d[0]]=+e.target.value;cur=-1;Array.prototype.forEach.call($("pre").children,function(b){b.setAttribute("aria-pressed","false")});render()}});
 HY.forEach(function(d){$("h_"+d[0]).oninput=function(e){H[d[0]]=+e.target.value||0;render()}});
 $("sc").onchange=render;
+$("pd").innerHTML=SP.map(function(s,k){return'<option value="'+k+'">'+s[0]+"</option>"}).join("");
+$("pd").onchange=function(){var k=+this.value,s=SP[k];P0=s[1];BASE.S=s[2];H.need=Math.round(NEED0*s[1]/P00*100)/100;$("h_need").value=H.need;var r=$("i_S");r.min=Math.max(1,Math.round(s[2]*.65));r.max=Math.round(s[2]*2.2);r.step=s[2]>100?10:s[2]>20?1:.5;$("sm_S").textContent="Slide : "+fm(s[2],1)+" ha";$("pdn").textContent=k==0?"Le total de 457 ha comprend aussi la liane de patate douce et le manioc (environ 10 ha).":"Rendement semencier de départ : "+fm(s[1]*1000/s[2],0)+" kg/ha. Les besoins de cette espèce sont une hypothèse (part de la production totale, donc 20 % de couverture au départ) : à remplacer.";setP(cur<0?0:cur)};
 setP(0);
 </script>
 </body>
