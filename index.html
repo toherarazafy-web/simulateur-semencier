@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulateur stratégique – système semencier Androy et Anosy</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f8f6;--card:#fff;--ink:#1c2b24;--mut:#5b6b63;--line:#d9dfdb;--g:#1f4d3a;--o:#c8892b;--r:#b5532f;--b:#3f7f93;--soft:#e8eeea;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a16;--card:#1b261f;--ink:#e6eee9;--mut:#9fb0a7;--line:#2e3d34;--g:#7fc3a0;--o:#e0a84d;--r:#e08a66;--b:#7fb8c9;--soft:#22302a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121a16;--card:#1b261f;--ink:#e6eee9;--mut:#9fb0a7;--line:#2e3d34;--g:#7fc3a0;--o:#e0a84d;--r:#e08a66;--b:#7fb8c9;--soft:#22302a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3",system-ui,sans-serif}
+.w{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+h1,h2{font-family:"Source Serif 4",Georgia,serif;color:var(--g);margin:0}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.15}
+h2{font-size:20px;margin-bottom:10px}
+.note{background:var(--soft);border-left:4px solid var(--o);padding:10px 14px;margin:14px 0 20px;font-size:15px}
+.pre{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.pre button{font:inherit;font-weight:600;padding:9px 14px;border:1px solid var(--g);background:var(--card);color:var(--g);border-radius:8px;cursor:pointer}
+.pre button[aria-pressed="true"]{background:var(--g);color:var(--bg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--o);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.s{margin:0 0 14px}
+.s label{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:15px}
+.s output{color:var(--g);font-variant-numeric:tabular-nums}
+.s input[type=range]{width:100%;accent-color:var(--g)}
+.tag{font-size:12px;font-weight:600;color:var(--r);margin-left:4px}
+.s small{color:var(--mut);display:block}
+select,input[type=number]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.k{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card)}
+.k b{display:block;font:700 28px/1.1 "Source Serif 4",Georgia,serif;color:var(--g);font-variant-numeric:tabular-nums}
+.k span{font-size:14px;color:var(--mut)}
+.k i{font-style:normal;font-size:13px;color:var(--b);display:block;margin-top:2px}
+.bar{height:14px;background:var(--soft);border-radius:7px;overflow:hidden;margin:6px 0 2px}
+.bar div{height:100%;background:var(--g)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+tr.on td{background:var(--soft);font-weight:600}
+.wrap{overflow-x:auto}
+details{margin-top:20px}
+summary{cursor:pointer;font-weight:600;color:var(--g)}
+.hy{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+.hy label{display:flex;flex-direction:column;font-size:14px;gap:3px}
+.hy input{width:100%}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>Simulateur stratégique du système semencier</h1>
+<p style="color:var(--mut);margin:6px 0 0">Androy et Anosy · point de départ : production déclarée de 177,12 t</p>
+<div class="note"><b>Outil de discussion, simulation non validée.</b> Les valeurs marquées « hypothèse » et les effets (eau, variétés, appui technique, sécheresse) ne viennent pas des données du projet. Ils sont modifiables en bas de page.</div>
+
+<div class="pre" id="pre" role="group" aria-label="Préréglages"></div>
+
+<div class="grid">
+<div class="card">
+<h2>Curseurs</h2>
+<div id="sl"></div>
+<div class="s"><label for="sc">Scénario climatique</label>
+<select id="sc"><option value="0">Année normale</option><option value="1">Année sèche</option><option value="2">Année très sèche</option></select></div>
+</div>
+
+<div>
+<div class="card">
+<h2>Résultats</h2>
+<div class="kp">
+<div class="k"><b id="rp">–</b><span>Production semencière (t)</span><i id="rpd"></i></div>
+<div class="k"><b id="rc">–</b><span>Besoins couverts</span><i id="rcd"></i></div>
+<div class="k"><b id="rd">–</b><span>Déficit estimé (t)</span><i id="rdd"></i></div>
+<div class="k"><b id="rf">–</b><span>Offre vendable vs demande formelle</span><i id="rfd"></i></div>
+</div>
+<div class="bar" aria-hidden="true"><div id="bc"></div></div>
+<small style="color:var(--mut)">Barre : part des besoins couverts (échelle 0 à 100 %)</small>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:20px">
+<h2>Robustesse des options : besoins couverts selon le climat</h2>
+<div class="wrap"><table id="tb"></table></div>
+<small style="color:var(--mut)">Une option robuste garde une couverture correcte même en année sèche.</small>
+</div>
+
+<details>
+<summary>Hypothèses modifiables</summary>
+<div class="hy" id="hy"></div>
+</details>
+</div>
+
+<script>
+var BASE={S:457,w:10,l:25,a:8,f:2,p:5},P0=177.12;
+var PR=[
+["Situation actuelle",{S:457,w:10,l:25,a:8,f:2,p:5}],
+["Option 1 · Renforcer l’existant",{S:500,w:10,l:22,a:12,f:4,p:15}],
+["Option 2 · Structurer le système régional",{S:550,w:15,l:20,a:18,f:8,p:25}],
+["Option 3 · Régional, climato-intelligent",{S:600,w:35,l:12,a:25,f:12,p:30}]];
+var SL=[
+["S","Surface de multiplication (ha)",300,1000,10,"ha",0,"Slide : 457 ha"],
+["w","Part de la surface à eau sécurisée (%)",0,100,1,"%",1,"hypothèse de départ"],
+["l","Pertes post-récolte (%)",0,50,1,"%",1,"hypothèse de départ"],
+["a","Adoption de nouvelles variétés (%)",0,60,1,"%",0,"Slide : 8 %"],
+["f","Part des semences par circuits formels (%)",0,40,1,"%",0,"Slide : 2 %"],
+["p","PMS professionnalisés (nombre)",0,80,1,"",1,"hypothèse de départ"]];
+var HY=[
+["gw","Gain de rendement avec eau sécurisée (%)",50],
+["gv","Gain de rendement d’une variété adaptée (%)",25],
+["gt","Gain de rendement d’un PMS professionnalisé (%)",30],
+["ha","Hectares conduits par PMS professionnalisé",8],
+["ls","Perte de rendement pluvial, année sèche (%)",30],
+["ld","Perte de rendement pluvial, année très sèche (%)",60],
+["vd","Part de la production vendable comme semence (%)",70],
+["need","Besoins théoriques (t), à remplacer par une estimation réelle",885.6],
+["inc","Incertitude sur les besoins (± %)",25]];
+var H={},V=Object.assign({},BASE),cur=0;
+function $(i){return document.getElementById(i)}
+function fm(x,d){return x.toLocaleString("fr-FR",{minimumFractionDigits:d||0,maximumFractionDigits:d||0})}
+function calc(v,sc){
+ var loss=[0,H.ls,H.ld][sc]/100,g=H.gw/100,w=v.w/100,w0=BASE.w/100;
+ var y=((1-w)*(1-loss)+w*(1+g))/((1-w0)+w0*(1+g));
+ var gv=H.gv/100,a=v.a/100,a0=BASE.a/100;
+ var va=((1-a)+a*(1+gv))/((1-a0)+a0*(1+gv));
+ var gt=H.gt/100,s=Math.min(1,v.p*H.ha/v.S),s0=Math.min(1,BASE.p*H.ha/BASE.S);
+ var t=(1+s*gt)/(1+s0*gt);
+ var pr=P0*(v.S/BASE.S)*y*va*t*(1-v.l/100)/(1-BASE.l/100);
+ return pr}
+function render(){
+ var sc=+$("sc").value,pr=calc(V,sc),n=H.need,i=H.inc/100;
+ var cov=pr/n*100,def=n-pr,vend=pr*H.vd/100,dem=V.f/100*n;
+ $("rp").textContent=fm(pr,1);
+ $("rpd").textContent=(pr>=P0?"+":"")+fm((pr/P0-1)*100,0)+" % vs 177,12 t";
+ $("rc").textContent=fm(cov,1)+" %";
+ $("rcd").textContent="Départ : 20 %";
+ $("rd").textContent=fm(def,0);
+ $("rdd").textContent="Fourchette : "+fm(n*(1-i)-pr,0)+" à "+fm(n*(1+i)-pr,0);
+ $("rf").textContent=dem>0?fm(vend/dem*100,0)+" %":"–";
+ $("rfd").textContent="Demande formelle "+fm(dem,0)+" t · offre vendable "+fm(vend,0)+" t";
+ $("bc").style.width=Math.min(100,cov)+"%";
+ SL.forEach(function(d){$("o_"+d[0]).textContent=fm(V[d[0]])+(d[5]?" "+d[5]:"")});
+ var h="<tr><th>Option</th><th>Normale</th><th>Sèche</th><th>Très sèche</th></tr>";
+ PR.forEach(function(p,k){h+="<tr"+(k==cur?' class="on"':"")+"><td>"+p[0]+"</td>"+[0,1,2].map(function(c){return"<td>"+fm(calc(p[1],c)/n*100,1)+" %</td>"}).join("")+"</tr>"});
+ $("tb").innerHTML=h}
+function setP(k){cur=k;V=Object.assign({},PR[k][1]);SL.forEach(function(d){$("i_"+d[0]).value=V[d[0]]});
+ Array.prototype.forEach.call($("pre").children,function(b,j){b.setAttribute("aria-pressed",j==k)});render()}
+H=HY.reduce(function(o,d){o[d[0]]=d[2];return o},{});
+$("pre").innerHTML=PR.map(function(p,k){return'<button type="button" aria-pressed="false">'+p[0]+"</button>"}).join("");
+Array.prototype.forEach.call($("pre").children,function(b,k){b.onclick=function(){setP(k)}});
+$("sl").innerHTML=SL.map(function(d){return'<div class="s"><label for="i_'+d[0]+'"><span>'+d[1]+(d[6]?'<span class="tag">hypothèse</span>':"")+'</span><output id="o_'+d[0]+'"></output></label><input type="range" id="i_'+d[0]+'" min="'+d[2]+'" max="'+d[3]+'" step="'+d[4]+'"><small>'+d[7]+"</small></div>"}).join("");
+$("hy").innerHTML=HY.map(function(d){return'<label>'+d[1]+'<input type="number" id="h_'+d[0]+'" value="'+d[2]+'" step="any" min="0"></label>'}).join("");
+SL.forEach(function(d){$("i_"+d[0]).oninput=function(e){V[d[0]]=+e.target.value;cur=-1;Array.prototype.forEach.call($("pre").children,function(b){b.setAttribute("aria-pressed","false")});render()}});
+HY.forEach(function(d){$("h_"+d[0]).oninput=function(e){H[d[0]]=+e.target.value||0;render()}});
+$("sc").onchange=render;
+setP(0);
+</script>
+</body>
+</html>
